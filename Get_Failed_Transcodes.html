@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+
+<html>
+
+<body onload="displayStatus()">
+
+<script>
+
+var myResponse = "VOID";
+var myIcr = "10.92.54.30";
+var myIcrName = new Array('Job Control 1');
+var myFailures = 'false';
+
+makeTable();
+
+
+function getHTTPObject() {
+var xhr;
+if(window.XMLHttpRequest) {
+	xhr = new XMLHttpRequest();
+}  // end if window.XMLHt
+else if(window.ActiveXObject)   {
+	xhr = new ActiveXObject("Microsoft.XMLHTTP");
+}  // end if window.Active
+	return xhr;
+}   // end function getHTTPObject
+
+
+function makeTable(){
+	document.write('<table border="1">');
+	document.write("<tr>");
+	document.write("<td> " + myIcrName + " iCR Transcode Info </td>");
+	document.write("</tr>");
+	document.write("<tr>");
+	document.write('<td id="myText">Querying Server for ALL Repurposing Jobs .... Please Be Patient...</td>');
+	document.write("</tr>");
+	document.write("</table>");
+	document.write('<p id="div1"/p>');
+}  // end of function makeTable
+
+
+function displayStatus() {
+	// start making the table here before the call
+	//
+	//
+	// now the heading is done, make the calls
+	//
+	var myxmlhttp = new Array();
+	myxmlhttp = getHTTPObject();
+	WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/control";
+	/* The web method to invoke */
+	WEBSERVICE_METHOD 	 = "getRepurposingJobsStatus";
+	WEBSERVICE_URL = "http://" + myIcr + ":8080/icr/ICRControl";
+	try {
+	myxmlhttp.onreadystatechange = function() {
+	if (4==myxmlhttp.readyState) {
+		if (200==myxmlhttp.status)  {
+			myResp = myxmlhttp.responseXML.getElementsByTagName("return") ;    // get the list of transcode job nodes
+			myRespLen = myResp.length ;
+			document.getElementById('myText').innerHTML += "Response Ready <br> ...Sifting through " + myRespLen + " returned jobs<br><br>" ;
+			document.getElementById('myText').innerHTML += 'ID,SUBMITTIME,STARTTIME,ENDTIME,FILE<br>' ;
+			//myRespStart = myRespLen - 100 ;
+			myRespStart = 0 ;
+			for ( var n = myRespStart ; n < myRespLen ; n++ ) {
+					myJobString = myResp[n].childNodes ;
+					//myID = myJobString[0].getElementsByTagName("id") ;
+					myF0 = myJobString[0].childNodes[0].data ;
+					myF1 = myJobString[1].childNodes[0].data ;
+					myF2 = myJobString[2].childNodes[0].data ;
+					myF3 = myJobString[3].childNodes[0].data ;
+					myF4 = myJobString[4].childNodes[0].data ;
+					try { myF5 = myJobString[5].childNodes[0].data ; }
+					catch(e) { myF5 = '' } ;
+					myN = n.toString();
+					if ( ( myF3 == "Failed" ) || ( myF4 == "Failed" ) || ( myF5 == "Failed" ) ) {  // if the job is done include it
+						//alert(myN);
+						myFailures = 'true';
+						var para=document.createElement("aa" + myN);
+						var node=document.createTextNode(document.getElementById('myText').innerHTML += myF0 + ', ' + myF1 + ', ' + myF2 + ', ' + myF3 + ', ' + myF4 + '<br><br>' );
+						//para.appendChild(node);
+					}
+			} // end of the for loop
+			if ( myFailures == 'true' ) {
+				var element=document.getElementById("div1");
+			} else {
+				var para=document.createElement("aa" + myN);
+				var node=document.createTextNode(document.getElementById('myText').innerHTML += '<br><br><br><br>NO FAILED TRANSCODES FOUND' );
+				para.appendChild(node);
+			}
+			element.appendChild(para);
+
+		} // endif 200=
+	} // endif 4=
+	}  // end anonymous readystatchange function
+
+
+	} // end of try()
+
+	catch (myErr) {alert('ONREADYSTATCHANGE FAILED ' + myIcr);}
+	try { myxmlhttp.open("POST", WEBSERVICE_URL, true); }
+	catch (myErr) { alert('OPEN FAILED TO ' + myIcr);}
+
+	try{ myxmlhttp.setRequestHeader("Content-Type", "text/xml"); }
+	catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcr);}
+
+	try { myxmlhttp.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+	catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcr);}
+
+	try { myxmlhttp.send('<?xml version="1.0" ?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><' 
+		+ WEBSERVICE_METHOD + ' xmlns="' + WEBSERVICE_NAMESPACE + '"/></S:Body></S:Envelope>'); }
+	catch (myErr) {alert('SEND FAILED TO ' + myIcr);}
+
+
+}  // end of displayStatus() function
+
+
+
+
+
+
+
+
+</script>
+
+
+<br>
+<br>
+
+<br><br><a href="iCR Dashboard.html">Back to Dashboard</a> <br>
+
+
+
+
+
+
+</body>
+
+
+

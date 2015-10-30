@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html>
+
+<body onload="displayStatus()">Job Controller Transcode Info</b>
+<br>
+<br>
+<br>
+
+
+<script>
+var myResponse = "VOID";
+
+var myIcr = "10.92.54.30";
+
+var myIcrName = new Array('Job Control 1');
+
+var NUMJOBS = 8;
+
+document.write('<table border="1">');
+document.write("<tr>");
+document.write("<td> " + myIcrName + " iCR Transcode Info </td>");
+document.write("</tr>");
+for ( jobs = 0 ; jobs < NUMJOBS ; jobs ++ ) {
+	document.write("<tr>");
+	//document.write("<td> " + 'JOB ID ' + " </td>");
+	document.write("<td id =" + jobs + "> &nbsp &nbsp &nbsp </td>");
+	document.write("</tr>");
+}
+document.write("</table>");
+//document.write('<button type="button" onclick="displayStatus()">Get Transcode Info</button>');
+document.write('<br><br><a href="iCR Dashboard.html">Back to Dashboard</a> <br>');
+
+function displayStatus() {
+	var myxmlhttp = new Array();
+	myxmlhttp = getHTTPObject();
+	WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/control";
+	/* The web method to invoke */
+	WEBSERVICE_METHOD 	 = "getTranscodeJobsStatus";
+	WEBSERVICE_URL = "http://" + myIcr + ":8080/icr/ICRControl";
+	myRow = 0;
+	try {
+	myxmlhttp.onreadystatechange = function() {
+	if (  200==myxmlhttp.status ) {
+		if (4==myxmlhttp.readyState)  {
+			myResp = myxmlhttp.responseText.split("<return>") ;
+				for ( n = 0 ; n < myResp.length ; n++ ) {
+					if ( myResp[n].match('PROCESSING') ) {
+							myJobId = myResp[n] ;
+							document.getElementById(myRow).innerHTML = myJobId.substr(0,myJobId.indexOf(','));
+							myRow++ ;
+						}  // end if it matches 'PROCESSING'
+				} // end of the for loop
+		} // endif 4=
+		//else alert("i readyState not 4..." + myxmlhttp.readyState);
+	} // endif 200=
+	//else alert("i status not 200 ..." + myxmlhttp.status);
+	}  // end anonymous readystatchange function
+
+	// we are here because we dont get the status200 and readyState4 that we need
+
+	} // after the try myxmlhttp.onreadysatechange
+	catch (myErr) {alert('ONREADYSTATCHANGE FAILED ' + myIcr);}
+
+
+	try { myxmlhttp.open("POST", WEBSERVICE_URL, true); }
+	catch (myErr) { alert('OPEN FAILED TO ' + myIcr);}
+
+	try{ myxmlhttp.setRequestHeader("Content-Type", "text/xml"); }
+	catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcr);}
+
+	try { myxmlhttp.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+	catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcr);}
+
+	try { myxmlhttp.send('<?xml version="1.0" ?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><' 
+		+ WEBSERVICE_METHOD + ' xmlns="' + WEBSERVICE_NAMESPACE + '"/></S:Body></S:Envelope>'); }
+	catch (myErr) {alert('SEND FAILED TO ' + myIcr);}
+
+}  // end of displayStatus() function
+
+
+function getHTTPObject() {
+var xhr;
+if(window.XMLHttpRequest) {
+	xhr = new XMLHttpRequest();
+}  // end if window.XMLHt
+else if(window.ActiveXObject)   {
+	xhr = new ActiveXObject("Microsoft.XMLHTTP");
+}  // end if window.Active
+	return xhr;
+}   // end function getHTTPObject
+
+
+
+</script>
+</html> 
+
+
+

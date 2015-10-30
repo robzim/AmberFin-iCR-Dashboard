@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html>
+
+<body onload="displayStatus()"><b>Job Controller Transcode Progress SNAPSHOT</b>
+<br>
+<br>
+<br>
+
+
+
+<script>
+
+function getHTTPObject() {
+var xhr;
+if(window.XMLHttpRequest) {
+	xhr = new XMLHttpRequest();
+}  // end if window.XMLHt
+else if(window.ActiveXObject)   {
+	//xhr = new ActiveXObject("Msxml2.XMLHTTP");
+	//xhr = new ActiveXObject("MSXML2.XMLHTTP.3.0");
+	xhr = new ActiveXObject("Microsoft.XMLHTTP");
+}  // end if window.Active
+	return xhr;
+}   // end function getHTTPObject
+
+var myResponse = "VOID";
+
+var myIcr = "10.92.54.30";
+
+var myIcrName = new Array('Job Control 1');
+
+var NUMJOBS = 8;
+
+var myRow = 0;
+var myElement = 0;
+
+document.write('<table border="1">');
+document.write("<tr>");
+document.write("<td> " + myIcrName + " iCR Transcode Progress</td>");
+document.write("</tr>");
+for ( jobs = 0 ; jobs < NUMJOBS ; jobs ++ ) {
+	document.write("<tr>");
+	document.write("<td id =" + jobs + "> &nbsp </td>");
+	jobStatus = jobs + 100
+	document.write("<td id =" + jobStatus + "> &nbsp </td>");
+	document.write("</tr>");
+}
+document.write("</table>");
+//document.write('<button type="button" onclick="displayStatus()">Get Transcode Progress</button>');
+document.write('<br><br><a href="iCR Dashboard.html">Back to Dashboard</a> <br>');
+
+
+
+
+//this function sends a SOAP request 
+// request string in xml format to be placed between <Body> and </Body> tags
+function sendSOAPRequest( reqString                                                                // request string in xml format to be placed between <Body> and </Body> tags
+                        , isLib                                                                    // is this request to Library or to Control
+						, requestSuccessResultHandler                                              // function to be executed when SOAP request return successful responce
+						, functionName
+						, myID ) {	                                                       // the name of the SOAP method - to be used for error alerting purposes
+	var subLocation;                                                                               // sublocation of an endpoint
+	var namespaceLocation;                                                                         // namespace location to be used
+	var namespace;  										// namespace to be used
+
+	//alert("in send soap request. reqString = " + reqString);
+
+	if(isLib){
+		// these subLocation, namespaceLocation and namespace are used for Library requests
+		subLocation = 'Library';
+		namespaceLocation = 'library';
+		namespace = 'lib';
+	} // end if(IsLib
+	else{
+		// these subLocation, namespaceLocation and namespace are used for Control requests
+		subLocation = 'ICRControl';
+		namespaceLocation = 'control';
+		namespace = 'con';
+	}  // end else
+	// create an Ajax request
+
+	var SOAP_Request = getHTTPObject();
+	WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/control";
+	/* The web method to invoke */
+	WEBSERVICE_METHOD 	 = "getTranscodeJobProgress";
+	WEBSERVICE_URL = "http://" + myIcr + ":8080/icr/ICRControl";
+	try { SOAP_Request.open("POST", WEBSERVICE_URL, true); }
+	catch (myErr) { alert('OPEN FAILED TO ' + myIcr);}
+	try{ SOAP_Request.setRequestHeader("Content-Type", "text/xml"); }
+	catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcr);}
+	try { SOAP_Request.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+	catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcr);}
+	// set the function to be executed when request changes state
+	SOAP_Request.onreadystatechange = function(){
+	    if(200 == SOAP_Request.status){
+	        if(4 == SOAP_Request.readyState){
+				// we get here if the request was successful
+				// the result would be a list of <return> tags with their children tags
+	            		var returnXML = SOAP_Request.responseXML ;
+				// pass a list of <return> tags to success result handler function
+				requestSuccessResultHandler(returnXML, myID)
+			}  // end if 4 = 
+	    } // end if 200 = 
+	} // end of anonymous onreadystatechange function
+	
+
+	var theSOAPRequest = '<?xml version="1.0" ?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' 
+		+ ' xmlns:con="' + WEBSERVICE_NAMESPACE + '">' + '<soapenv:Header/><soapenv:Body>' + reqString + '</soapenv:Body></soapenv:Envelope>' ;
+
+	//alert(theSOAPRequest);
+
+	try { SOAP_Request.send(theSOAPRequest); }
+	catch (myErr) {alert('SEND FAILED TO ' + myIcr);}
+
+
+}
+
+
+
+
+
+function displayStatus() {
+	var myxmlhttp = new Array();
+	myxmlhttp = getHTTPObject();
+	WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/control";
+	/* The web method to invoke */
+	WEBSERVICE_METHOD 	 = "getTranscodeJobsStatus";
+	WEBSERVICE_URL = "http://" + myIcr + ":8080/icr/ICRControl";
+	try { myxmlhttp.open("POST", WEBSERVICE_URL, true); }
+	catch (myErr) { alert('OPEN FAILED TO ' + myIcr);}
+	try{ myxmlhttp.setRequestHeader("Content-Type", "text/xml"); }
+	catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcr);}
+	try { myxmlhttp.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+	catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcr);}
+	myRow = 0;
+	try {
+	myxmlhttp.onreadystatechange = function() {
+	if (  4==myxmlhttp.readyState ) {
+		if (200==myxmlhttp.status)  {
+			myResp = myxmlhttp.responseXML.getElementsByTagName("return") ;    // get the list of transcode job nodes			
+			//myResp = myxmlhttp.responseXML.getElementsByTagName("return")[0].childNodes[0].nodeValue;
+			myRespLen = myResp.length ;
+			//alert("myRespL = " + myRespLen + "myResp = " + myResp);
+				for ( n = 0 ; n < myRespLen ; n++ ) {
+					myJobString = myResp[n].childNodes[0].data ;
+					//alert(myJobString);
+					if ( myJobString.match('PROCESSING') ) {
+						myElement = myRow + 100 ;
+						//myJobId = myxmlhttp.responseXML.getElementsByTagName("return")[0].childNodes[0].nodeValue
+						myJobId = myResp[n].childNodes[0].nodeValue.substr(0,myResp[n].childNodes[0].nodeValue.indexOf(',')) ;
+						document.getElementById(myRow).innerHTML = myJobId ;
+						var myReqString = 
+						    '<con:getTranscodeJobProgress>' +   //<!-- This returns the progress of the transcode job. -->
+							'<arg0>' + myJobId +'</arg0>' +     //<!-- The first parameter is the job ID returned by the ‘transcode’ operation -->
+						      '</con:getTranscodeJobProgress>';        
+
+							try{ myJobStatus = sendSOAPRequest(myReqString, false, processTranscodeSuccessResponse,'getTranscodeJobProgress', myElement); }
+							catch(e) {alert("job progress failed");}
+							myRow++ ;
+						}  // end if it matches 'PROCESSING'
+				} // end of the for loop
+		} // endif 200=
+		//else alert("i readyState not 4..." + myxmlhttp.readyState);
+	} // endif 4=
+	//else alert("i status not 200 ..." + myxmlhttp.status);
+	}  // end anonymous readystatchange function
+
+	// we are here because we dont get the status200 and readyState4 that we need
+
+	} // after the try myxmlhttp.onreadysatechange
+	catch (myErr) {alert('ONREADYSTATCHANGE FAILED ' + myIcr);}
+
+
+	try { myxmlhttp.send('<?xml version="1.0" ?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><' 
+		+ WEBSERVICE_METHOD + ' xmlns="' + WEBSERVICE_NAMESPACE + '"/></S:Body></S:Envelope>'); }
+	catch (myErr) {alert('SEND FAILED TO ' + myIcr);}
+
+}  // end of displayStatus() function
+
+
+
+
+var processTranscodeSuccessResponse = function(returnXML, myElement) {			                       // this function is called if SOAP request returns successful response
+// structure of responce - returnXML (for more details see sendSOAPRequest function).
+//alert("in processtranscodesuccessresponse");		
+currentJobProgress = returnXML.getElementsByTagName("return")[0].childNodes[0].nodeValue;                                 // set the currentJobProgress
+//alert('myElement= ' + myElement + ' currentJobProgress= ' + currentJobProgress);
+document.getElementById(myElement).innerHTML = currentJobProgress ;
+};
+
+
+</script>
+</html>
+
+
+

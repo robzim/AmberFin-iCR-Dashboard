@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script src="myiCRs.js"></script>
+
+<script>
+
+var myIcr = "" ;
+
+function getHTTPObject() {
+var xhr;
+if(window.XMLHttpRequest) {
+	xhr = new XMLHttpRequest();
+}  // end if window.XMLHt
+else if(window.ActiveXObject)   {
+	xhr = new ActiveXObject("Microsoft.XMLHTTP");
+}  // end if window.Active
+	return xhr;
+}   // end function getHTTPObject
+
+
+
+
+//this function sends a SOAP request 
+// request string in xml format to be placed between <Body> and </Body> tags
+function sendSOAPRequest( reqString                                                                // request string in xml format to be placed between <Body> and </Body> tags
+						, requestSuccessResultHandler                              // function to be executed when SOAP request return successful responce
+						, functionName) {                                          // the name of the SOAP method - to be used for error alerting purposes
+	var subLocation;                                                                               // sublocation of an endpoint
+	var namespaceLocation;                                                                         // namespace location to be used
+	var namespace;  										// namespace to be used
+
+	console.log("in send soap request. reqString = " + reqString);
+
+	// these subLocation, namespaceLocation and namespace are used for Library requests
+	subLocation = 'Library';
+	namespaceLocation = 'library';
+	namespace = 'lib';
+	// create an Ajax request
+
+	var SOAP_Request = getHTTPObject();
+	WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/library";
+	console.log(WEBSERVICE_NAMESPACE);
+	/* The web method to invoke */
+	WEBSERVICE_METHOD 	 = "getClipInfo";
+	console.log(WEBSERVICE_METHOD);
+	WEBSERVICE_URL = "http://" + myIcr + ":8080/icr/ICRLibrary";
+	console.log(WEBSERVICE_URL);
+	try { SOAP_Request.open("POST", WEBSERVICE_URL, true); }
+	catch (myErr) { alert('OPEN FAILED TO ' + myIcr);}
+	try{ SOAP_Request.setRequestHeader("Content-Type", "text/xml"); }
+	catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcr);}
+	try { SOAP_Request.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+	catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcr);}
+	// set the function to be executed when request changes state
+	SOAP_Request.onreadystatechange = function(){
+	    console.log("ReadyState: " + SOAP_Request.readyState);
+	    console.log("Request Status: " + SOAP_Request.status + " " + SOAP_Request.statusText);
+	    if(4 == SOAP_Request.readyState){
+	        if(200 == SOAP_Request.status){
+				// we get here if the request was successful
+				// the result would be a list of <return> tags with their children tags
+	            		var returnXML = SOAP_Request.responseXML ;
+				var returnText = SOAP_Request.responseText ;
+				alert(returnText);
+				// pass a list of <return> tags to success result handler function
+				requestSuccessResultHandler(returnXML, myResponseHolder, myInfo)
+			}  // end if 200 = 
+	    } // end if 4 = 
+	} // end of anonymous onreadystatechange function
+	
+
+	var theSOAPRequest = '<?xml version="1.0" ?><soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/"' 
+		+ ' xmlns:con="' + WEBSERVICE_NAMESPACE + '">' + '<soapenv:Header/><soapenv:Body>' + reqString + '</soapenv:Body></soapenv:Envelope>' ;
+
+	console.log('in sendSOAPRequest function SOAP Request: ' + theSOAPRequest);
+
+	try { SOAP_Request.send(theSOAPRequest); }
+	catch (myErr) {alert('SEND FAILED TO ' + myIcr);}
+
+
+}
+
+
+var processLibrarySuccessResponse = function(returnXML, myElement, myText ) {			                       // this function is called if SOAP request returns successful response
+// structure of responce - returnXML (for more details see sendSOAPRequest function).
+alert("in processlibrarysuccessresponse");		
+currentJobProgress = returnXML.getElementsByTagName("return")[0].childNodes[0].nodeValue;                                 // set the currentJobProgress
+document.getElementById(myElement).innerHTML += myText ;
+};
+
+
+function makeButtons(){
+document.write('<h1>Get Library Entries</h1>');
+document.write('<br>');
+document.write('<table border="1">');
+for ( ip = 0 ; ip < myIcrs.length ; ip++ )
+	{
+	document.write("<tr>");
+	document.write("<td> " + '<button type="button" onclick="getLibraryEntriesForICR(' + ip + ')">Library Entries for ' + myIcrNames[ip] + '</button>' + ' </td>');
+	document.write("<td id=" + myIcrs[ip] + ">" + " RESPONSE " + "</td>");
+	document.write("</tr>");
+	}
+	document.write("<tr>");
+	document.write('<td id="myResponseHolder">' + ' LIBRARY ENTRIES RESPONSE ' + '</td>');
+	document.write("</tr>");
+document.write("</table>");
+document.write('<br><br><a href="iCR Dashboard.html">Back to Dashboard</a> <br>');
+}  // end function makeButtons
+
+
+function getLibraryEntriesForICR(i) {
+		// clean up any past indicators - rz
+		for ( ip = 0 ; ip < myIcrs.length ; ip++ )
+		{
+		document.getElementById(myIcrs[ip]).style.color="black";
+		document.getElementById(myIcrs[ip]).innerHTML="RESPONSE";
+		}
+		myIcr = myIcrs[i];
+		var myxmlhttp = new Array();
+		myxmlhttp = getHTTPObject();
+		WEBSERVICE_NAMESPACE = "http://snellwilcox.com/xmlbinding/icr/2007/04/library";
+		/* The web method to invoke */
+		WEBSERVICE_METHOD 	 = "getLibraryEntries";
+		WEBSERVICE_URL = "http://" + myIcrs[i] + ":8080/icr/Library";
+		try {
+		myxmlhttp.onreadystatechange = function() {
+		if (  4==myxmlhttp.readyState ) {
+			if (200==myxmlhttp.status)  {
+				myRespText = myxmlhttp.responseText;
+				myRespXML = myxmlhttp.responseXML;
+				myRespList = myRespXML.querySelectorAll('return');
+				if(myRespText.match('getLibraryEntriesResponse')) {
+					document.getElementById(myIcrs[i]).style.color="green";
+					document.getElementById(myIcrs[i]).innerHTML="RESPONSE RECEIVED";
+					document.getElementById("myResponseHolder").innerHTML = '<br>'  ;
+					for ( myEntries = 0 ; myEntries < myRespList.length ; myEntries ++ ) {
+						myOutput = myRespList[myEntries] ;
+						document.getElementById("myResponseHolder").innerHTML+= 'Library Entry '  ;
+						document.getElementById("myResponseHolder").innerHTML+= myEntries + ':  <br>Asset: '  ;
+						document.getElementById("myResponseHolder").innerHTML+=myOutput.childNodes[0].textContent  ;
+						document.getElementById("myResponseHolder").innerHTML+= '<br>Path: '  ;
+						var myPath = myOutput.childNodes[1].textContent  ;
+						var myInfo = new Array() ;
+						var myReqString = 
+						    '<con:getClipInfo>' +   //<!-- This returns the progress of the transcode job. -->
+							'<arg0>' + myPath +'</arg0>' +     //<!-- The first parameter is the job ID returned by the ‘transcode’ operation -->
+						      '</con:getClipInfo>' ;        
+							sendSOAPRequest(myReqString, processLibrarySuccessResponse, 'getClipInfo');
+							//try{ myClipInfo = sendSOAPRequest(myReqString, true , processLibrarySuccessResponse, 'getClipInfo' , myResponseHolder , myInfo ); }
+							//catch(e) {alert("clip info failed");}
+						document.getElementById("myResponseHolder").innerHTML+= myPath ;
+						document.getElementById("myResponseHolder").innerHTML+= '<br>Modified: '  ;
+						document.getElementById("myResponseHolder").innerHTML+=myOutput.childNodes[2].textContent  ;
+						document.getElementById("myResponseHolder").innerHTML+= '<br>Created: '  ;
+						try { document.getElementById("myResponseHolder").innerHTML+=myOutput.childNodes[3].textContent  ;}
+						catch(e) {}
+						document.getElementById("myResponseHolder").innerHTML+= '<br>'  ;
+						try { document.getElementById("myResponseHolder").innerHTML+=myOutput.childNodes[4].textContent  ; }
+						catch(e) {}
+						document.getElementById("myResponseHolder").innerHTML+= '<br><br>'  ;
+
+					}  // end for
+
+				}
+			} // endif 200=
+			//else alert("i readyState not 4..." + myxmlhttp.readyState);
+		} // endif 4=
+		//else alert("i status not 200 ..." + myxmlhttp.status);
+		}  // end anonymous readystatchange function
+		// we are here because we dont get the status200 and readyState4 that we need
+		document.getElementById(myIcrs[i]).innerHTML="GET LIBRARY ENTRIES SENT";
+		}
+		catch (myErr) {alert('ONREADYSTATCHANGE FAILED ' + myIcrs[i]);}
+
+
+		try { myxmlhttp.open("POST", WEBSERVICE_URL, true); }
+		catch (myErr) { alert('OPEN FAILED TO ' + myIcrs[i]);}
+		try{ myxmlhttp.setRequestHeader("Content-Type", "text/xml"); }
+		catch (myErr) { alert('SETRUQUESTHEADER CONTENT-TYPE FAILED TO ' + myIcrs[i]);}
+		try { myxmlhttp.setRequestHeader("SOAPAction", WEBSERVICE_NAMESPACE + "/" + WEBSERVICE_METHOD ); }
+		catch (myErr) { alert('SETRUQUESTHEADER SOAPACTION FAILED TO ' + myIcrs[i]);}
+		try { myxmlhttp.send('<?xml version="1.0" ?><S:Envelope xmlns:S="http://schemas.xmlsoap.org/soap/envelope/"><S:Body><' 
+			+ WEBSERVICE_METHOD + ' xmlns="' + WEBSERVICE_NAMESPACE + '"/></S:Body></S:Envelope>'); }
+		catch (myErr) {alert('SEND FAILED TO ' + myIcrs[i]);}
+
+
+} // end of getLibraryEntriesForICR() function
+
+
+
+
+</script>
+</head>
+
+<body>
+<a href="iCR Dashboard.html">Back to Dashboard</a> <br>
+<br>
+<br>
+<script>
+makeButtons();
+</script>
+
+
+</body>
+
+</html> 
