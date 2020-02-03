@@ -1,35 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head><title>Mill Dashboard ALPHA</title>
-    <link rel="stylesheet" type="text/css" href="index.css">
-    <meta charset="UTF-8">
-</head>
-
-<h1>iCR Dashboard</h1>
-<body>
-<h3>Software and Status</h3>
-<a href="Is_Web_Service_Enabled.html">Get WEB Services Status of iCRs</a>  <br>
-<a href="Get_iCR_Versions.html">Get VERSIONS of iCR Software by Machine</a> <br>
-<h3>Library and Player</h3>
-<a href="Get_Library_Entries.html">Get Library Entries for iCR</a>  <br>
-<a href="What is Loaded from Library.html">Get LIBRARY CLIPS Loaded in Player</a>  <br>
-<a href="Get_Playing_Info.html">Get PLAYING File Name and Current Position</a>  <br>
-<a href="Remove_Missing_Entries.html">Remove Missing Library Entries</a>  <br>
-<h3>SDI Signal and Recorder</h3>
-<a href="Get_SDI_Input_Signal_Validity.html">Get VALIDITY of SDI Input Signal</a>  <br>
-<a href="Get_Control_Mode.html">Get CONTROL Mode</a>  <br>
-<a href="Get_Recording_Info.html">Get RECORDING Info</a>  <br>
-<h3>Transcode</h3>
-<a href="Get_Failed_Transcodes.html">Get FAILED Transcode Details for Metrics</a>  <br>
-<a href="Get_Completed_Transcodes_and_Transcode_Times.html">Get ALL COMPLETED Transcode Details for Metrics</a>  <br>
-<a href="Get_Waiting_Transcodes.html">Get WAITING Transcodes</a>  <br>
-<a href="Get_Transcode_Info.html">Get RUNNING Transcodes and GUIDs SNAPSHOT</a>  <br>
-<a href="Get_Transcode_Job_Progress_Snapshot.html">Get RUNNING Transcode Job GUIDs and Progress SNAPSHOT</a>  <br>
-<a href="Get_Transcode_File_Names_and_Details.html">Get RUNNING Transcodes and File Names with 15 SEC UPDATE</a>  <br>
-<a href="Get_Completed_Transcodes_and_Transcode_Times_In_Last_24_Hours.html">Get COMPLETED Transcodes and Transcode Times in Last 24 Hours</a>  <br>
-<a href="Get_Failed_Transcodes_In_Last_24_Hours.html">Get FAILED Transcodes In Last 24 Hours</a>  <br>
-<a href="Get_Failed_Transcodes_Any_iCR.html">Get FAILED Transcodes ANY iCR</a>  <br>
-<a href="Get_Cancelled_Transcodes_In_Last_24_Hours.html">Get CANCELLED Transcodes In Last 24 Hours</avar myResponse = "VOID";
+var myResponse = "VOID";
 
 
 document.write('<table border="1">');
@@ -98,12 +67,3 @@ else if(window.ActiveXObject)   {
 }  // end if window.Active
 	return xhr;
 }   // end function getHTTPObject
->  <br>
-<a href="Get_All_Transcodes_Any_iCR.html">Get ALL Transcodes ANY iCR</a>  <br>
-
-</body>
-</html> 
-
-
-
-
